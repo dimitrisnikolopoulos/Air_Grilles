@@ -57,9 +57,16 @@ def save_air_tunnel(df, filename):
     with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         workbook = writer.book
         df.to_excel(excel_writer=writer, sheet_name='Sheet1', float_format='%.4f', encoding='utf8')
-        df.pivot_table(index=df['Fan (Hz)'], values=['In Air Flow (m³/h)', 'Out Air Speed (m/s)', 'Out Dif Pressure (Pa)'], aggfunc=np.mean).to_excel(
-            excel_writer=writer, sheet_name='Sheet2', float_format='%.4f', encoding='utf8')
+        pivot = df.pivot_table(index=df['Fan (Hz)'], values=['In Air Flow (m³/h)', 'Out Air Speed (m/s)', 'Out Dif Pressure (Pa)'], aggfunc=np.mean)
+        pivot['S (m²)'] = pivot['In Air Flow (m³/h)'] / (pivot['Out Air Speed (m/s)'] * 3600)
+        pivot['<S> (m²)'] = pivot['S (m²)'].mean()
+        pivot['dS (m²)'] = (pivot['S (m²)'] - pivot['<S> (m²)'])/pivot['<S> (m²)']
+        pivot.to_excel(excel_writer=writer, sheet_name='Sheet2', float_format='%.4f', encoding='utf8')
+
         worksheet = writer.sheets['Sheet2']
+
+        for _c in range(2, worksheet.max_row + 1):
+            worksheet.cell(_c, 7).number_format = '0.00%'
 
         data1 = Reference(writer.sheets['Sheet2'], 3, 1, 3, worksheet.max_row)
         data2 = Reference(writer.sheets['Sheet2'], 4, 1, 4, worksheet.max_row)
@@ -73,7 +80,7 @@ def save_air_tunnel(df, filename):
         c1.add_data(data1, titles_from_data=True)
         c1.set_categories(cats)
         line1 = c1.series[0]
-        line1.trendline = Trendline()
+        line1.trendline = Trendline(dispEq=True, dispRSqr=True)
         line1.graphicalProperties.line = openpyxl.drawing.line.LineProperties(
             solidFill=openpyxl.drawing.colors.ColorChoice(prstClr='blue'), prstDash='dash')
 
@@ -85,7 +92,7 @@ def save_air_tunnel(df, filename):
         c2.add_data(data2, titles_from_data=True)
         c2.set_categories(cats)
         line2 = c2.series[0]
-        line2.trendline = Trendline()
+        line2.trendline = Trendline(dispEq=True, dispRSqr=True)
         line2.graphicalProperties.line = openpyxl.drawing.line.LineProperties(
             solidFill=openpyxl.drawing.colors.ColorChoice(prstClr='red'), prstDash='dash')
 
