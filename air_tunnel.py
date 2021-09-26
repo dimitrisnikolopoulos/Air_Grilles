@@ -17,6 +17,7 @@ import jinja2
 
 import openpyxl
 from openpyxl import load_workbook
+from openpyxl.styles import Font
 from openpyxl.chart import LineChart, SurfaceChart, Reference
 from openpyxl.chart.trendline import Trendline
 
@@ -58,14 +59,27 @@ def save_air_tunnel(df, filename):
         workbook = writer.book
         df.to_excel(excel_writer=writer, sheet_name='Sheet1', float_format='%.4f', encoding='utf8')
         pivot = df.pivot_table(index=df['Fan (Hz)'], values=['In Air Flow (m³/h)', 'Out Air Speed (m/s)', 'Out Dif Pressure (Pa)'], aggfunc=np.mean)
-        pivot['S (m²)'] = pivot['In Air Flow (m³/h)'] / (pivot['Out Air Speed (m/s)'] * 3600)
-        pivot['<S> (m²)'] = pivot['S (m²)'].mean()
-        pivot['dS (m²)'] = (pivot['S (m²)'] - pivot['<S> (m²)'])/pivot['<S> (m²)']
+        # pivot['S (m²)'] = pivot['In Air Flow (m³/h)'] / (pivot['Out Air Speed (m/s)'] * 3600)
+        # pivot['<S> (m²)'] = pivot['S (m²)'].mean()
+        # pivot['dS (m²)'] = (pivot['S (m²)'] - pivot['<S> (m²)'])/pivot['<S> (m²)']
         pivot.to_excel(excel_writer=writer, sheet_name='Sheet2', float_format='%.4f', encoding='utf8')
 
         worksheet = writer.sheets['Sheet2']
 
+        worksheet.cell(1, 5).value = 'S (m²)'
+        worksheet.cell(1, 5).font = Font(bold=True)
+        worksheet.cell(1, 6).value = '<S> (m²)'
+        worksheet.cell(1, 6).font = Font(bold=True)
+        worksheet.cell(1, 7).value = 'dS (m²)'
+        worksheet.cell(1, 7).font = Font(bold=True)
+        for row in range(2, worksheet.max_row + 1):
+            worksheet.cell(row, 5).value = "=B" + str(row) + "/(C" + str(row) + "*3600)"
+            worksheet.cell(row, 6).value = "=AVERAGE(E2:E" + str(worksheet.max_row) + ")"
+            worksheet.cell(row, 7).value = "=(E" + str(row) + "-F" + str(row) + ")/F" + str(row)
+
         for _c in range(2, worksheet.max_row + 1):
+            worksheet.cell(_c, 5).number_format = '0.0000'
+            worksheet.cell(_c, 6).number_format = '0.0000'
             worksheet.cell(_c, 7).number_format = '0.00%'
 
         data1 = Reference(writer.sheets['Sheet2'], 3, 1, 3, worksheet.max_row)
@@ -148,6 +162,7 @@ def bold(x):
     """ * """
     if x in (0.2, 0.3, 0.5):
         return 'font-weight: bold'
+    return None
 
 
 def read_range_room(r_filename):
