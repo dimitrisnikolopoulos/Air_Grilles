@@ -66,11 +66,11 @@ def save_air_tunnel(df, filename):
 
         worksheet = writer.sheets['Sheet2']
 
-        worksheet.cell(1, 5).value = 'S (m²)'
+        worksheet.cell(1, 5).value = 'A (m²)'
         worksheet.cell(1, 5).font = Font(bold=True)
-        worksheet.cell(1, 6).value = '<S> (m²)'
+        worksheet.cell(1, 6).value = '<A> (m²)'
         worksheet.cell(1, 6).font = Font(bold=True)
-        worksheet.cell(1, 7).value = 'dS (m²)'
+        worksheet.cell(1, 7).value = 'dA (m²)'
         worksheet.cell(1, 7).font = Font(bold=True)
         for row in range(2, worksheet.max_row + 1):
             worksheet.cell(row, 5).value = "=B" + str(row) + "/(C" + str(row) + "*3600)"
